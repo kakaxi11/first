@@ -27,6 +27,10 @@ import router from './router'
 
 import store from './store'
 
+import axios from 'axios'
+
+Vue.prototype.$http = axios
+
 // Internationalization
 import i18n from './lang'
 import { global } from '@/global/global'

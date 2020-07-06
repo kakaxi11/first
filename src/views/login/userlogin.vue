@@ -1,4 +1,6 @@
 <template>
+<div>
+<div>
   <el-form class="login-form" status-icon :rules="loginRules" ref="loginForm" :model="loginForm" label-width="0">
     <el-form-item prop="username">
       <el-input size="small" @keyup.enter.native="handleLogin" v-model="loginForm.username" auto-complete="off" placeholder="请输入用户名">
@@ -16,6 +18,52 @@
       <el-button type="primary" size="small" @click.native.prevent="handleLogin" class="login-submit">登录</el-button>
     </el-form-item>
   </el-form>
+</div>
+
+
+
+
+
+
+ <el-table
+    :data="userList"
+    height="250"
+    border
+    style="width: 100%">
+    <el-table-column
+      prop="id"
+      label="用户ID"
+      width="80">
+    </el-table-column>
+    <el-table-column
+      prop="name"
+      label="用户姓名"
+      width="150">
+    </el-table-column>
+    <el-table-column
+      prop="email"
+      label="邮箱"
+      width="180"
+      >
+    </el-table-column>
+       <el-table-column
+      prop="sex"
+      label="性别">
+      <template slot-scope="scope">
+{{scope.row.sex ===1?"男":"女"}}
+      </template>
+    </el-table-column>
+    <el-table-column label="操作">
+   <el-button type="primary" icon="el-icon-edit" circle @click="edit(scope.row.id)"></el-button>
+    </el-table-column>
+  </el-table>
+
+
+
+
+
+
+</div>
 </template>
 
 <script>
@@ -44,6 +92,8 @@ export default {
         username: 'admin',
         password: '123456'
       },
+      userList:[],
+      dialogFormVisible:false,
       checked: false,
       code: {
         src: '',
@@ -75,18 +125,32 @@ export default {
   },
   props: [],
   methods: {
+    edit(id){
+      // 拿到当前对象
+      let idnex = this.userList.findIndex(item=>{
+        return item.id ===id;
+      })
+      this.editform = this.userList[idnex]
+      this.dialogFormVisible = true;
+    },
     showPassword() {
       this.passwordType === ''
         ? (this.passwordType = 'password')
         : (this.passwordType = '')
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.$store.dispatch('Login', this.loginForm).then(res => {
-            this.$router.push({ path: '/dashboard/dashboard' })
-          })
-        }
+    //   this.$refs.loginForm.validate(valid => {
+    //     if (valid) {
+    //       this.$store.dispatch('Login', this.loginForm).then(res => {
+    //         this.$router.push({ path: '/dashboard/dashboard' })
+    //       })
+    //     }
+    //   })
+      this.$http.get('http://127.0.0.1:8080/foot').then(res=>{
+    console.log(res);
+    this.loginForm.username = res.data[0].name
+    this.loginForm.password = res.data[0].phone
+    this.userList = res.data
       })
     }
   }

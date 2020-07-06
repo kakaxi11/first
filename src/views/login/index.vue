@@ -1,6 +1,37 @@
 <template>
   <div class="login-container pull-height" @keyup.enter.native="handleLogin">
     <div class="login-info text-white animated fadeInLeft">
+
+
+
+<el-dialog title="修改用户信息" :visible.sync="dialogFormVisible">
+  <el-form :model="editform">
+    <el-form-item label="用户id" :label-width="formLabelWidth">
+      <el-input v-model="editform.id" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="用户姓名" :label-width="formLabelWidth">
+      <el-input v-model="editform.name" autocomplete="off"></el-input>
+    </el-form-item>
+     <el-form-item label="用户邮箱" :label-width="formLabelWidth">
+      <el-input v-model="editform.email" autocomplete="off"></el-input>
+    </el-form-item>
+
+
+    <el-form-item label="用户性别" :label-width="formLabelWidth">
+      <el-select v-model="editform.sex" placeholder="请选择用户性别">
+        <el-option label="男" :value="1"></el-option>
+        <el-option label="女" :value="0"></el-option>
+      </el-select>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="editSend">确 定</el-button>
+  </div>
+</el-dialog>
+
+
+
       <div class="logo" style="margin-top:-426px">
           <img src="../../assets/images/home/logo.png" width="160px" height="160px" alt="logo" style="vertical-align: middle;" />
       </div>
@@ -17,7 +48,80 @@
         </h4>
         <el-tabs v-model="activeName">
           <el-tab-pane label="用户密码" name="user">
-            <userLogin></userLogin>
+         
+            <div>
+<div>
+  <el-form class="login-form" status-icon :rules="loginRules" ref="loginForm" :model="loginForm" label-width="0">
+    <el-form-item prop="username">
+      <el-input size="small" @keyup.enter.native="handleLogin" v-model="loginForm.username" auto-complete="off" placeholder="请输入用户名">
+        <i slot="prefix" class="icon-yonghu"></i>
+      </el-input>
+    </el-form-item>
+    <el-form-item prop="password">
+      <el-input size="small" @keyup.enter.native="handleLogin" :type="passwordType" v-model="loginForm.password" auto-complete="off" placeholder="请输入密码">
+        <i class="el-icon-view el-input__icon" slot="suffix" @click="showPassword"></i>
+        <i slot="prefix" class="icon-mima"></i>
+      </el-input>
+    </el-form-item>
+    <el-checkbox v-model="checked">记住账号</el-checkbox>
+    <el-form-item>
+      <el-button type="primary" size="small" @click.native.prevent="handleLogin" class="login-submit">登录</el-button>
+      <el-button @click="add">新增用户</el-button>
+    </el-form-item>
+  </el-form>
+</div>
+
+
+
+
+
+
+ <el-table
+    :data="userList"
+    height="250"
+    border
+    style="width: 100%">
+    <el-table-column
+      prop="id"
+      label="用户ID"
+      width="80">
+    </el-table-column>
+    <el-table-column
+      prop="name"
+      label="用户姓名"
+      width="150">
+    </el-table-column>
+    <el-table-column
+      prop="email"
+      label="邮箱"
+      width="180"
+      >
+    </el-table-column>
+       <el-table-column
+      prop="sex"
+      label="性别">
+      <template slot-scope="scope">
+{{scope.row.sex ===1?"男":"女"}}
+      </template>
+    </el-table-column>
+    <el-table-column label="操作">
+      <template slot-scope="scope">
+   <el-button type="primary" icon="el-icon-edit" circle @click="edit(scope.row.id)"></el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+
+
+
+
+
+
+</div>
+
+
+
+
+
           </el-tab-pane>
           <el-tab-pane label="短信验证码" name="code">
             <codeLogin></codeLogin>
@@ -29,18 +133,65 @@
   </div>
 </template>
 <script>
-import userLogin from './userlogin'
 import codeLogin from './codelogin'
 import { mapGetters } from 'vuex'
+import { isvalidUsername } from '@/utils/validate'
 export default {
   name: 'login',
   components: {
-    userLogin,
+
     codeLogin
   },
   data() {
+      const validateUsername = (rule, value, callback) => {
+      if (!isvalidUsername(value)) {
+        callback(new Error('请输入正确的用户名'))
+      } else {
+        callback()
+      }
+    }
+    const validateCode = (rule, value, callback) => {
+      if (this.code.value !== value) {
+        this.loginForm.code = ''
+        this.refreshCode()
+        callback(new Error('请输入正确的验证码'))
+      } else {
+        callback()
+      }
+    }
     return {
-      activeName: 'user'
+      activeName: 'user',
+         loginForm: {
+        username: 'admin',
+        password: '123456'
+      },
+      userList:[],
+      dialogFormVisible:false,
+      checked: false,
+      code: {
+        src: '',
+        value: '',
+        len: 4,
+        type: 'text'
+      },
+      editform:{},
+      loginRules: {
+        username: [
+          { required: true, trigger: 'blur', validator: validateUsername }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, message: '密码长度最少为6位', trigger: 'blur' }
+        ],
+        code: [
+          { required: true, message: '请输入验证码', trigger: 'blur' },
+          { min: 4, max: 4, message: '验证码长度为4位', trigger: 'blur' },
+          { required: true, trigger: 'blur', validator: validateCode }
+        ]
+      },
+      passwordType: 'password',
+      formLabelWidth:'80px'
+      
     }
   },
   created() {},
@@ -49,7 +200,66 @@ export default {
     ...mapGetters(['website'])
   },
   props: [],
-  methods: {}
+  methods: {
+    add(){
+    this.$http.get('http://127.0.0.1:8080/edit').then(res=>{
+      this.$message.success(res.data);
+      this.handleLogin()
+    })
+
+
+    },
+ edit(id){
+      // 拿到当前对象
+      let idnex = this.userList.findIndex(item=>{
+        return item.id ===id;
+      })
+      this.editform = this.userList[idnex]
+      this.dialogFormVisible = true;
+    },
+    showPassword() {
+      this.passwordType === ''
+        ? (this.passwordType = 'password')
+        : (this.passwordType = '')
+    },
+    //点击完成修改
+editSend(){
+  this.dialogFormVisible = false
+
+
+  this.$http.post('127.0.0.1:8080/edit',this.editform).then(res=>{
+    this.$http.success('修改成功');
+  })
+  //首先从servlet获取到传过去的对象，
+  // 然后再servlet里调用修改数据库函数，函数的参数为传过去的对象，再修改一下数据库函数，把值都动态绑定。
+
+
+
+
+
+
+
+
+
+},
+
+    handleLogin() {
+    //   this.$refs.loginForm.validate(valid => {
+    //     if (valid) {
+    //       this.$store.dispatch('Login', this.loginForm).then(res => {
+    //         this.$router.push({ path: '/dashboard/dashboard' })
+    //       })
+    //     }
+    //   })
+      this.$http.get('http://127.0.0.1:8080/foot').then(res=>{
+    console.log(res);
+    this.loginForm.username = res.data[0].name
+    this.loginForm.password = res.data[0].phone
+    this.userList = res.data
+      })
+    }
+
+  }
 }
 </script>
 

@@ -15,6 +15,9 @@
      <el-form-item label="用户邮箱" :label-width="formLabelWidth">
       <el-input v-model="editform.email" autocomplete="off"></el-input>
     </el-form-item>
+      <el-form-item label="用户电话" :label-width="formLabelWidth">
+      <el-input v-model="editform.phone" autocomplete="off"></el-input>
+    </el-form-item>
 
 
     <el-form-item label="用户性别" :label-width="formLabelWidth">
@@ -27,6 +30,33 @@
   <div slot="footer" class="dialog-footer">
     <el-button @click="dialogFormVisible = false">取 消</el-button>
     <el-button type="primary" @click="editSend">确 定</el-button>
+  </div>
+</el-dialog>
+
+<el-dialog title="新增用户" :visible.sync="adddialogFormVisible">
+  <el-form :model="addform">
+    <el-form-item label="用户id" :label-width="formLabelWidth">
+      <el-input v-model="addform.id" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="用户姓名" :label-width="formLabelWidth">
+      <el-input v-model="addform.name" autocomplete="off"></el-input>
+    </el-form-item>
+     <el-form-item label="用户邮箱" :label-width="formLabelWidth">
+      <el-input v-model="addform.email" autocomplete="off"></el-input>
+    </el-form-item>
+      <el-form-item label="用户电话" :label-width="formLabelWidth">
+      <el-input v-model="addform.phone" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="用户性别" :label-width="formLabelWidth">
+      <el-select v-model="addform.sex" placeholder="请选择用户性别">
+        <el-option label="男" :value="1"></el-option>
+        <el-option label="女" :value="0"></el-option>
+      </el-select>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addSend">确 定</el-button>
   </div>
 </el-dialog>
 
@@ -47,12 +77,12 @@
         <h4 class="login-title">登录{{website.title}}
         </h4>
         <el-tabs v-model="activeName">
-          <el-tab-pane label="用户密码" name="user">
+          <el-tab-pane label="用户列表" name="user">
          
             <div>
 <div>
   <el-form class="login-form" status-icon :rules="loginRules" ref="loginForm" :model="loginForm" label-width="0">
-    <el-form-item prop="username">
+    <!-- <el-form-item prop="username">
       <el-input size="small" @keyup.enter.native="handleLogin" v-model="loginForm.username" auto-complete="off" placeholder="请输入用户名">
         <i slot="prefix" class="icon-yonghu"></i>
       </el-input>
@@ -62,10 +92,10 @@
         <i class="el-icon-view el-input__icon" slot="suffix" @click="showPassword"></i>
         <i slot="prefix" class="icon-mima"></i>
       </el-input>
-    </el-form-item>
-    <el-checkbox v-model="checked">记住账号</el-checkbox>
+    </el-form-item> -->
+    <!-- <el-checkbox v-model="checked">记住账号</el-checkbox> -->
     <el-form-item>
-      <el-button type="primary" size="small" @click.native.prevent="handleLogin" class="login-submit">登录</el-button>
+      <el-button type="primary" size="small" @click.native.prevent="handleLogin" class="login-submit">获取用户列表</el-button>
       <el-button @click="add">新增用户</el-button>
     </el-form-item>
   </el-form>
@@ -78,7 +108,7 @@
 
  <el-table
     :data="userList"
-    height="250"
+    height="500"
     border
     style="width: 100%">
     <el-table-column
@@ -97,16 +127,25 @@
       width="180"
       >
     </el-table-column>
+     <el-table-column
+      prop="phone"
+      label="电话"
+      width="180"
+      >
+    </el-table-column>
        <el-table-column
       prop="sex"
       label="性别">
       <template slot-scope="scope">
-{{scope.row.sex ===1?"男":"女"}}
+{{scope.row.sex ==1?"男":"女"}}
       </template>
     </el-table-column>
-    <el-table-column label="操作">
+    <el-table-column label="操作"
+    width="118"
+    >
       <template slot-scope="scope">
-   <el-button type="primary" icon="el-icon-edit" circle @click="edit(scope.row.id)"></el-button>
+   <el-button type="primary" icon="el-icon-edit" circle @click="edit(scope.row.id)" size="small"></el-button>
+   <el-button type="danger" icon="el-icon-delete" circle @click="delet(scope.row.id)" size="small"></el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -117,11 +156,6 @@
 
 
 </div>
-
-
-
-
-
           </el-tab-pane>
           <el-tab-pane label="短信验证码" name="code">
             <codeLogin></codeLogin>
@@ -165,8 +199,10 @@ export default {
         username: 'admin',
         password: '123456'
       },
+      addform:{},
       userList:[],
       dialogFormVisible:false,
+      adddialogFormVisible:false,
       checked: false,
       code: {
         src: '',
@@ -202,8 +238,13 @@ export default {
   props: [],
   methods: {
     add(){
-    this.$http.get('http://127.0.0.1:8080/edit').then(res=>{
-      this.$message.success(res.data);
+      this.adddialogFormVisible = true;
+    },
+    // 新增用户
+    addSend(){
+    this.$http.post('http://127.0.0.1:8080/adds',JSON.stringify(this.addform)).then(res=>{
+      this.$message.success("新增成功");
+      this.adddialogFormVisible =false;
       this.handleLogin()
     })
 
@@ -226,8 +267,8 @@ export default {
 editSend(){
   this.dialogFormVisible = false
 
-
-  this.$http.post('127.0.0.1:8080/edit',this.editform).then(res=>{
+// JSONstringify将值转换为json字符串
+  this.$http.post('http://127.0.0.1:8080/edit',JSON.stringify(this.editform)).then(res=>{
     this.$http.success('修改成功');
   })
   //首先从servlet获取到传过去的对象，
@@ -307,20 +348,19 @@ editSend(){
   background-color: #fff;
 }
 .login-main > h3 {
-  margin-bottom: 20px;
+ 
 }
 .login-main > p {
   color: #76838f;
 }
 .login-title {
-  margin: 0 0 20px;
+  // margin: 0 0 20px;
   text-align: center;
   color: #409eff;
   letter-spacing: 3px;
 }
 .login-submit {
-  margin-top: 20px;
-  width: 100%;
+  margin-top: 0px;
   border-radius: 28px;
 }
 .login-form {
